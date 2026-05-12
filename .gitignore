@@ -1,6 +1,11 @@
 /models/
 /data
 /notebooks/runs/
+
+# Legacy repo-root notebooks (huge embedded outputs; use modeling/notebooks + .md exports).
+/notebooks/*.ipynb
+/notebooks/**/*.ipynb
+
 modeling/data
 modeling/runs/
 
