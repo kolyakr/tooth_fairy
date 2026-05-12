@@ -1,0 +1,27 @@
+# ToothFairy API — build from repository root: `docker build -f Dockerfile.backend .`
+# Runtime expects PYTHONPATH=/app (repo root) so `backend` and `modeling` packages resolve.
+
+FROM python:3.12-slim AS base
+
+WORKDIR /app
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONPATH=/app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY backend/requirements.txt /tmp/backend-requirements.txt
+RUN pip install --upgrade pip && pip install -r /tmp/backend-requirements.txt
+
+ARG INSTALL_ML=false
+COPY backend/requirements-ml.txt /tmp/backend-requirements-ml.txt
+RUN if [ "$INSTALL_ML" = "true" ]; then pip install -r /tmp/backend-requirements-ml.txt; fi
+
+COPY backend /app/backend
+COPY modeling /app/modeling
+
+EXPOSE 8000
+CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]

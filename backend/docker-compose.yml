@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: toothfairy
+      POSTGRES_PASSWORD: toothfairy
+      POSTGRES_DB: toothfairy
+    ports:
+      - "5432:5432"
+    volumes:
+      - toothfairy_pg:/var/lib/postgresql/data
+
+volumes:
+  toothfairy_pg:

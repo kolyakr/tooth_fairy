@@ -1,0 +1,1 @@
+"""ToothFairy FastAPI backend package."""

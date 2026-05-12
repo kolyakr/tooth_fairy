@@ -1,0 +1,11 @@
+[project]
+name = "toothfairy-backend"
+version = "0.1.0"
+description = "FastAPI backend for ToothFairy dental OPG analysis."
+readme = "README.md"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["app/tests"]
+pythonpath = [".."]

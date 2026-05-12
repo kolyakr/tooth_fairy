@@ -1,0 +1,371 @@
+{
+  "info": {
+    "name": "ToothFairy Backend API",
+    "_postman_id": "6a1d8920-3e55-4c56-b81b-6e46576f918e",
+    "description": "Collection for testing ToothFairy FastAPI backend endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "analysisId",
+      "value": ""
+    },
+    {
+      "key": "findingId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "POST /api/v1/patients",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient_code\": \"P-4021\",\n  \"name\": \"Demo Patient\",\n  \"age\": 45\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/patients"
+          }
+        },
+        {
+          "name": "GET /api/v1/patients/{id}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v1/patients/{{patientId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analyses",
+      "item": [
+        {
+          "name": "POST /api/v1/analyses (upload)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "patient_code",
+                  "value": "P-4021",
+                  "type": "text"
+                },
+                {
+                  "key": "patient_name",
+                  "value": "Demo Patient",
+                  "type": "text"
+                },
+                {
+                  "key": "age",
+                  "value": "45",
+                  "type": "text"
+                },
+                {
+                  "key": "scan_date",
+                  "value": "2026-05-08",
+                  "type": "text"
+                },
+                {
+                  "key": "chief_complaint",
+                  "value": "pain",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/v1/analyses"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.id) { pm.collectionVariables.set('analysisId', json.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/v1/analyses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analyses?limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analyses"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /api/v1/analyses/{analysisId}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v1/analyses/{{analysisId}}"
+          }
+        },
+        {
+          "name": "GET /api/v1/analyses/{analysisId}/findings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v1/analyses/{{analysisId}}/findings"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const arr = pm.response.json();",
+                  "if (Array.isArray(arr) && arr.length > 0 && arr[0].id) { pm.collectionVariables.set('findingId', arr[0].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/v1/analyses/{analysisId}/image?kind=original",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analyses/{{analysisId}}/image?kind=original",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analyses",
+                "{{analysisId}}",
+                "image"
+              ],
+              "query": [
+                {
+                  "key": "kind",
+                  "value": "original"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /api/v1/analyses/{analysisId}/image?kind=teeth_overlay",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analyses/{{analysisId}}/image?kind=teeth_overlay",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analyses",
+                "{{analysisId}}",
+                "image"
+              ],
+              "query": [
+                {
+                  "key": "kind",
+                  "value": "teeth_overlay"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Findings",
+      "item": [
+        {
+          "name": "POST /api/v1/analyses/{analysisId}/findings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Reviewer",
+                "value": "Dr. Nick"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tooth_label\": \"FDI-36\",\n  \"finding\": \"Manual Finding\",\n  \"confidence\": 1.0,\n  \"accepted\": true,\n  \"polygon\": [\n    {\n      \"x\": 120,\n      \"y\": 180\n    },\n    {\n      \"x\": 170,\n      \"y\": 180\n    },\n    {\n      \"x\": 150,\n      \"y\": 220\n    }\n  ],\n  \"layer\": \"periapical\",\n  \"source\": \"manual\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/analyses/{{analysisId}}/findings"
+          }
+        },
+        {
+          "name": "PATCH /api/v1/findings/{findingId}",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Reviewer",
+                "value": "Dr. Nick"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accepted\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/findings/{{findingId}}"
+          }
+        },
+        {
+          "name": "DELETE /api/v1/findings/{findingId}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-Reviewer",
+                "value": "Dr. Nick"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/findings/{{findingId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit & Review",
+      "item": [
+        {
+          "name": "GET /api/v1/analyses/{analysisId}/audit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v1/analyses/{{analysisId}}/audit"
+          }
+        },
+        {
+          "name": "POST /api/v1/analyses/{analysisId}/audit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reviewer\": \"Dr. Nick\",\n  \"action\": \"Checked findings in Postman\",\n  \"action_type\": \"system\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/analyses/{{analysisId}}/audit"
+          }
+        },
+        {
+          "name": "GET /api/v1/analyses/{analysisId}/audit/export",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v1/analyses/{{analysisId}}/audit/export"
+          }
+        },
+        {
+          "name": "POST /api/v1/analyses/{analysisId}/complete-review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reviewer\": \"Dr. Nick\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/v1/analyses/{{analysisId}}/complete-review"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+# ML inference stack (optional — install alongside requirements.txt for live YOLO runs)
+# conda activate ml-env  # recommended per AGENTS.md
+torch>=2.4.0,<3
+ultralytics>=8.3.0,<9
+opencv-python-headless>=4.10.0,<5
+numpy>=1.26.0,<3
