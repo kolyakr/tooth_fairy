@@ -33,11 +33,7 @@ End-to-end flow from **input X-ray** through **quadrant crops**, **parallel head
 
 ## Demo
 
-<video controls playsinline width="720">
-  <source src="https://raw.githubusercontent.com/kolyakr/tooth_fairy/main/uploads/tooth_fairy_test.mp4" type="video/mp4" />
-</video>
-
-[`uploads/tooth_fairy_test.mp4`](uploads/tooth_fairy_test.mp4)
+https://github.com/user-attachments/assets/84dbfbfd-2de6-47a2-b897-cdf87ce3783a
 
 ---
 
