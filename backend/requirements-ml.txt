@@ -1,5 +1,7 @@
 # ML inference stack (optional — install alongside requirements.txt for live YOLO runs)
 # conda activate ml-env  # recommended per AGENTS.md
+# CPU-only hosts (e.g. Render): install torch from https://download.pytorch.org/whl/cpu then
+# ``pip install -r backend/requirements-ml-cpu.txt`` — see docs/DEPLOYMENT.md.
 torch>=2.4.0,<3
 ultralytics>=8.3.0,<9
 opencv-python-headless>=4.10.0,<5

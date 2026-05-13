@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -43,6 +44,15 @@ async def lifespan(app: FastAPI):
     # which causes Render (and similar) health checks to time out.
     app.state.model_registry = None
     app.state.guest_workspace = GuestWorkspace(settings)
+    for key, p in settings.resolved_model_paths().items():
+        if not Path(p).is_file():
+            log.warning(
+                "ML weight file missing for '%s' at %s — inference will fail until weights exist. "
+                "Git excludes *.pt; use volume mounts, paths in TOOTHFAIRY_MODEL_*_PATH, or "
+                "``python scripts/fetch_ml_weights.py`` with TOOTHFAIRY_FETCH_WEIGHT_*_URL (see docs/DEPLOYMENT.md).",
+                key,
+                p,
+            )
     yield
     await engine.dispose()
 

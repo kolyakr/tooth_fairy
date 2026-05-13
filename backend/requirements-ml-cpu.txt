@@ -1,0 +1,6 @@
+# ML stack without torch (CPU hosts: install torch separately from PyTorch CPU wheels).
+# Render / other CPU-only Linux: use the build one-liner in docs/DEPLOYMENT.md so ``torch``
+# is not pulled from PyPI (which defaults to large CUDA wheels on Linux x86_64).
+ultralytics>=8.3.0,<9
+opencv-python-headless>=4.10.0,<5
+numpy>=1.26.0,<3
