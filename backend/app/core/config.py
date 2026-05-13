@@ -74,6 +74,13 @@ class Settings(BaseSettings):
     conf_teeth: float = 0.3
     conf_periapical: float = 0.3
     conf_teeth_classification: float = 0.3
+    inference_parallel_crop_models: bool = Field(
+        default=True,
+        description=(
+            "When true, run teeth / periapical / teeth-classification on quadrant crops in parallel (faster, "
+            "higher peak RAM). Set false on small hosts (e.g. Render free tier) to avoid OOM and 502 restarts."
+        ),
+    )
 
     @field_validator("guest_cookie_samesite", mode="before")
     @classmethod

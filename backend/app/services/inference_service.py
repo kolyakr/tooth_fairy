@@ -315,6 +315,7 @@ def _run_pipeline_sync(
         conf_periapical=settings.conf_periapical,
         conf_teeth_classification=settings.conf_teeth_classification,
         model_registry=model_registry,
+        parallel_crop_models=settings.inference_parallel_crop_models,
     )
 
 

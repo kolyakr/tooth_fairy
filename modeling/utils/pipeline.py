@@ -209,17 +209,31 @@ def _teeth_classification_from_quadrant_crops(
     return all_detections
 
 
-def _run_crop_models_parallel(
+def _run_crop_models(
     crops_data: List[dict],
     registry: ModelRegistry,
     selected_tasks: Set[str],
     conf_teeth: float,
     conf_periapical: float,
     conf_teeth_classification: float,
+    *,
+    parallel: bool,
 ) -> Dict[str, List[dict]]:
-    """Run crop-level models in parallel (thread pool)."""
+    """Run crop-level teeth / periapical / classification models (parallel or sequential)."""
     if not crops_data:
         return {}
+
+    if not parallel:
+        out: Dict[str, List[dict]] = {}
+        if "teeth" in selected_tasks:
+            out["teeth"] = _teeth_from_quadrant_crops(crops_data, registry, conf_teeth)
+        if "periapical" in selected_tasks:
+            out["periapical"] = _periapical_from_quadrant_crops(crops_data, registry, conf_periapical)
+        if "teeth_classification" in selected_tasks:
+            out["teeth_classification"] = _teeth_classification_from_quadrant_crops(
+                crops_data, registry, conf_teeth_classification
+            )
+        return out
 
     futures: Dict[str, Future] = {}
     with ThreadPoolExecutor(max_workers=3) as executor:
@@ -237,6 +251,8 @@ def _run_crop_models_parallel(
         return {name: fut.result() for name, fut in futures.items()}
 
 
+
+
 def run_pipeline(
     image_path: ImagePath,
     tasks: Iterable[str],
@@ -246,11 +262,14 @@ def run_pipeline(
     conf_periapical: float = 0.3,
     conf_teeth_classification: float = 0.3,
     model_registry: Optional[ModelRegistry] = None,
+    *,
+    parallel_crop_models: bool = True,
 ) -> PipelineOutput:
     """Run selected tasks for one image and save visualized outputs.
 
-    Stage 1: quadrant segmentation and crops. Stage 2 (parallel): teeth segmentation,
-    periapical on crops, teeth classification on crops.
+    Stage 1: quadrant segmentation and crops. Stage 2: teeth segmentation,
+    periapical on crops, teeth classification on crops — in parallel when
+    ``parallel_crop_models`` is true (default), else sequentially (lower peak RAM).
 
     Args:
         image_path: Input panoramic image path.
@@ -261,6 +280,7 @@ def run_pipeline(
         conf_periapical: Confidence threshold for periapical detection on crops.
         conf_teeth_classification: Confidence threshold for teeth classification on crops.
         model_registry: Optional shared registry to reuse loaded weights across runs.
+        parallel_crop_models: When false, run crop-stage models one after another.
     """
     image = to_path(image_path)
     if not image.exists():
@@ -310,13 +330,14 @@ def run_pipeline(
             for item in crops_data
         ]
 
-    stage2 = _run_crop_models_parallel(
+    stage2 = _run_crop_models(
         crops_data,
         registry,
         selected_tasks,
         conf_teeth,
         conf_periapical,
         conf_teeth_classification,
+        parallel=parallel_crop_models,
     )
 
     if "teeth" in selected_tasks:
