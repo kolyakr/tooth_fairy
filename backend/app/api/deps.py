@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 import uuid
 from dataclasses import dataclass
 from typing import Annotated
@@ -78,6 +79,19 @@ def assert_guest_session_owns(request: Request, record_session_id: uuid.UUID) ->
         raise NotFoundError("Analysis not found.")
 
 
+_model_registry_lock = threading.Lock()
+
+
 async def get_model_registry(request: Request):
-    """Return the shared Ultralytics registry from application state."""
+    """Return the shared Ultralytics registry, building it on first use."""
+    existing = getattr(request.app.state, "model_registry", None)
+    if existing is not None:
+        return existing
+    with _model_registry_lock:
+        existing = getattr(request.app.state, "model_registry", None)
+        if existing is not None:
+            return existing
+        from backend.app.core.model_registry import build_model_registry
+
+        request.app.state.model_registry = build_model_registry()
     return request.app.state.model_registry

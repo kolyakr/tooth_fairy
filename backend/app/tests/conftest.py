@@ -26,7 +26,7 @@ from backend.app.main import app
 def patch_model_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     """Avoid loading Ultralytics weights during app lifespan."""
 
-    monkeypatch.setattr("backend.app.main.build_model_registry", lambda: object())
+    monkeypatch.setattr("backend.app.core.model_registry.build_model_registry", lambda: object())
 
 
 @pytest.fixture

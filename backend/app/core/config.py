@@ -98,7 +98,8 @@ class Settings(BaseSettings):
                 "(browsers reject SameSite=None without Secure)."
             )
         if self.guest_cookie_secure and self.guest_cookie_samesite == "lax":
-            return self.model_copy(update={"guest_cookie_samesite": "none"})
+            # BaseSettings: do not return model_copy() from a model_validator (pydantic warns and ignores it).
+            object.__setattr__(self, "guest_cookie_samesite", "none")
         return self
 
     @field_validator(

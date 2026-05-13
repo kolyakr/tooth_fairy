@@ -14,7 +14,6 @@ from backend.app.api.routes import analyses, auth, findings, health, patients
 from backend.app.core.config import get_settings
 from backend.app.core.database import engine
 from backend.app.core.logging import configure_logging, get_logger
-from backend.app.core.model_registry import build_model_registry
 from backend.app.services.domain_errors import DomainError
 from backend.app.services.guest_workspace import GuestWorkspace
 
@@ -39,7 +38,10 @@ async def lifespan(app: FastAPI):
             type(exc).__name__,
             exc,
         )
-    app.state.model_registry = build_model_registry()
+    # Defer ``build_model_registry()`` until first inference (see ``get_model_registry``): importing
+    # torch/ultralytics/matplotlib during lifespan blocks the event loop and delays binding $PORT,
+    # which causes Render (and similar) health checks to time out.
+    app.state.model_registry = None
     app.state.guest_workspace = GuestWorkspace(settings)
     yield
     await engine.dispose()
