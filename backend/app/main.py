@@ -40,8 +40,7 @@ async def lifespan(app: FastAPI):
             exc,
         )
     # Defer ``build_model_registry()`` until first inference (see ``get_model_registry``): importing
-    # torch/ultralytics/matplotlib during lifespan blocks the event loop and delays binding $PORT,
-    # which causes Render (and similar) health checks to time out.
+    # torch/ultralytics/matplotlib during lifespan blocks the event loop during startup.
     app.state.model_registry = None
     app.state.guest_workspace = GuestWorkspace(settings)
     for key, p in settings.resolved_model_paths().items():
@@ -49,7 +48,7 @@ async def lifespan(app: FastAPI):
             log.warning(
                 "ML weight file missing for '%s' at %s — inference will fail until weights exist. "
                 "Git excludes *.pt; use volume mounts, paths in TOOTHFAIRY_MODEL_*_PATH, or "
-                "``python scripts/fetch_ml_weights.py`` with TOOTHFAIRY_FETCH_WEIGHT_*_URL (see docs/DEPLOYMENT.md).",
+                "``python scripts/fetch_ml_weights.py`` with TOOTHFAIRY_FETCH_WEIGHT_*_URL env vars.",
                 key,
                 p,
             )

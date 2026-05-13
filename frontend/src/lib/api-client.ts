@@ -47,6 +47,13 @@ async function parseError(res: Response): Promise<string> {
   }
 }
 
+function gatewayHint(status: number): string {
+  if (status === 502 || status === 503 || status === 504) {
+    return " The API process may have crashed or restarted, or the edge proxy timed out.";
+  }
+  return "";
+}
+
 export async function createAnalysis(form: FormData): Promise<AnalysisCreateResponse> {
   const res = await fetch(apiV1("/analyses"), {
     method: "POST",
@@ -58,13 +65,37 @@ export async function createAnalysis(form: FormData): Promise<AnalysisCreateResp
   return res.json() as Promise<AnalysisCreateResponse>;
 }
 
-export async function getAnalysis(id: string): Promise<AnalysisDetail> {
-  const res = await fetch(apiV1(`/analyses/${id}`), {
-    cache: "no-store",
-    ...fetchDefaults,
-    headers: { ...authHeaders() },
-  });
-  if (!res.ok) throw new Error(await parseError(res));
+export async function getAnalysis(id: string, signal?: AbortSignal): Promise<AnalysisDetail> {
+  let res: Response;
+  try {
+    res = await fetch(apiV1(`/analyses/${id}`), {
+      cache: "no-store",
+      ...fetchDefaults,
+      headers: { ...authHeaders() },
+      signal,
+    });
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") throw e;
+    if (e instanceof Error && e.name === "AbortError") throw e;
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new Error(
+      `${msg} — If the console also shows a CORS error, the browser may be masking a 502/503 from the API. Check API logs and server resources.`,
+    );
+  }
+  if (!res.ok) {
+    const detail = await parseError(res);
+    if (res.status === 502 || res.status === 503 || res.status === 504) {
+      throw new Error(`API unavailable (${res.status}).${gatewayHint(res.status)}`);
+    }
+    if (res.status === 404) {
+      const authed = Boolean(getStoredAccessToken());
+      const hint = authed
+        ? " With an account this usually means a wrong or removed id."
+        : " Guest analyses live only in this server’s memory; after a deploy or restart (or opening the viewer without the same guest cookie) the id is gone — start a new scan, or sign in so uploads are stored in the database.";
+      throw new Error(`${detail}${hint}`);
+    }
+    throw new Error(detail + gatewayHint(res.status));
+  }
   return res.json() as Promise<AnalysisDetail>;
 }
 

@@ -33,26 +33,36 @@ export function AnalysisStatusPanel({ analysisId }: { analysisId: string }) {
 
   useEffect(() => {
     let cancelled = false;
+    const ac = new AbortController();
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let pollDelayMs = POLL_MS;
 
-    const poll = async () => {
+    const loop = async () => {
+      if (cancelled) return;
       try {
-        const d = await getAnalysis(analysisId);
+        const d = await getAnalysis(analysisId, ac.signal);
         if (!cancelled) {
           setDetail(d);
           setPollError("");
+          pollDelayMs = POLL_MS;
         }
       } catch (e) {
-        if (!cancelled) {
-          setPollError(e instanceof Error ? e.message : "Could not load analysis.");
-        }
+        if (cancelled) return;
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        if (e instanceof Error && e.name === "AbortError") return;
+        setPollError(e instanceof Error ? e.message : "Could not load analysis.");
+        pollDelayMs = Math.min(Math.round(pollDelayMs * 1.5), 15_000);
+      }
+      if (!cancelled) {
+        timeoutId = window.setTimeout(() => void loop(), pollDelayMs);
       }
     };
 
-    void poll();
-    const id = window.setInterval(() => void poll(), POLL_MS);
+    void loop();
     return () => {
       cancelled = true;
-      window.clearInterval(id);
+      ac.abort();
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
     };
   }, [analysisId]);
 
@@ -172,7 +182,9 @@ export function AnalysisStatusPanel({ analysisId }: { analysisId: string }) {
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className={cn("font-medium", active && "text-primary")}>{label}</span>
-                  {active ? <span className="text-xs text-primary/90">Active step — simulated pacing for UX</span> : null}
+                  {active && idx < STEP_LABELS.length - 1 ? (
+                    <span className="text-xs text-primary/90">Illustrative step while the server runs the pipeline.</span>
+                  ) : null}
                 </span>
               </li>
             );

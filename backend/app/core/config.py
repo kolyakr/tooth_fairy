@@ -78,7 +78,7 @@ class Settings(BaseSettings):
         default=True,
         description=(
             "When true, run teeth / periapical / teeth-classification on quadrant crops in parallel (faster, "
-            "higher peak RAM). Set false on small hosts (e.g. Render free tier) to avoid OOM and 502 restarts."
+            "higher peak RAM). Set false on low-memory hosts to reduce OOM risk and unstable restarts."
         ),
     )
 

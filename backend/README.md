@@ -164,9 +164,9 @@ curl -s -X POST "$HOST/api/v1/analyses/<ANALYSIS_ID>/complete-review" \
   -d '{"reviewer":"Dr. Smith"}'
 ```
 
-## Production
+## Configuration
 
-See **[docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md)** in the repository for environment variables, Docker (`Dockerfile.backend`, `docker-compose.prod.yml`), TLS, CORS, JWT and guest cookies, and database migrations.
+Environment variables are documented in [`.env.example`](.env.example) (copy values to a repo-root `.env` for local runs).
 
 ## Tests
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Download YOLO ``.pt`` weights for hosts where binaries are not in git.
+"""Download YOLO ``.pt`` weights when binaries are not present in the working tree.
 
-Repository root ``.gitignore`` excludes ``*.pt``; Render and similar Git-based
-deploys therefore need a build step that places files under ``modeling/models/``.
+Repository ``.gitignore`` excludes ``*.pt``; use this script (or manual copies) to
+place files under ``modeling/models/``.
 
 Set any of the following to an HTTPS URL for the corresponding ``best.pt``:
 
@@ -15,11 +15,8 @@ Run from the repository root::
 
     python scripts/fetch_ml_weights.py
 
-Typical Render **Build Command** suffix (after ``pip install ...``)::
-
-    && python scripts/fetch_ml_weights.py
-
-Store URLs in Render **Secret** environment variables if the artifacts are private.
+You can chain the script after dependency install in a setup script; keep download
+URLs in environment variables or a secret store if the artifacts are private.
 """
 
 from __future__ import annotations

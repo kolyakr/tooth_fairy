@@ -16,6 +16,7 @@ from .model_inference import (
 )
 from .visualization import (
     draw_global_detections_overlay,
+    draw_quadrant_crop_pathology_overlay,
     draw_quadrants_overlay,
     save_bgr,
     save_quadrant_grid,
@@ -264,6 +265,7 @@ def run_pipeline(
     model_registry: Optional[ModelRegistry] = None,
     *,
     parallel_crop_models: bool = True,
+    save_quadrant_pathology_crops: bool = False,
 ) -> PipelineOutput:
     """Run selected tasks for one image and save visualized outputs.
 
@@ -281,6 +283,8 @@ def run_pipeline(
         conf_teeth_classification: Confidence threshold for teeth classification on crops.
         model_registry: Optional shared registry to reuse loaded weights across runs.
         parallel_crop_models: When false, run crop-stage models one after another.
+        save_quadrant_pathology_crops: When true, save four JPEGs (one per quadrant crop) with
+            periapical + caries/impacted overlays in crop space (for local inspection / README).
     """
     image = to_path(image_path)
     if not image.exists():
@@ -363,6 +367,26 @@ def run_pipeline(
         tc_path = out_dir / f"{base_name}_teeth_classification_overlay.jpg"
         save_bgr(tc_path, tc_overlay)
         out_files["teeth_classification_overlay"] = tc_path
+
+    if (
+        save_quadrant_pathology_crops
+        and crops_data
+        and (("periapical" in selected_tasks) or ("teeth_classification" in selected_tasks))
+    ):
+        peri_list = predictions.get("periapical", []) if "periapical" in selected_tasks else []
+        tc_list = predictions.get("teeth_classification", []) if "teeth_classification" in selected_tasks else []
+        for item in crops_data:
+            qid = int(item["class_id"])
+            crop_vis = draw_quadrant_crop_pathology_overlay(
+                item["crop"],
+                top_left=item["top_left"],
+                quadrant_id=qid,
+                periapical=peri_list,
+                teeth_classification=tc_list,
+            )
+            crop_path = out_dir / f"{base_name}_quadrant{qid}_crop_pathology.jpg"
+            save_bgr(crop_path, crop_vis)
+            out_files[f"quadrant{qid}_crop_pathology"] = crop_path
 
     original_copy_path = out_dir / f"{base_name}_original.jpg"
     save_bgr(original_copy_path, original_bgr)

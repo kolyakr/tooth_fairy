@@ -1,7 +1,7 @@
 # ML inference stack (optional — install alongside requirements.txt for live YOLO runs)
-# conda activate ml-env  # recommended per AGENTS.md
+# conda activate ml-env  # or your Python 3.12+ venv
 # Linux x86_64: PyPI resolves torch with NVIDIA CUDA wheels (large). On small builders use
-# ``pip install --no-cache-dir`` to reduce peak disk (see docs/DEPLOYMENT.md).
+# ``pip install --no-cache-dir`` to reduce peak disk usage.
 torch>=2.4.0,<3
 ultralytics>=8.3.0,<9
 opencv-python-headless>=4.10.0,<5
