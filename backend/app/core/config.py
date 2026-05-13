@@ -6,7 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List, Literal, Optional, Union
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -52,7 +52,11 @@ class Settings(BaseSettings):
     )
     guest_cookie_samesite: Literal["lax", "strict", "none"] = Field(
         default="lax",
-        description="SameSite policy for the guest cookie; use none only for cross-site API with HTTPS.",
+        description=(
+            "SameSite policy for the guest cookie. When guest_cookie_secure is True, "
+            "the default lax value is upgraded to none so browsers attach the cookie on "
+            "cross-origin fetch (localhost UI → HTTPS API)."
+        ),
     )
 
     repo_root: Path = Field(default_factory=_default_repo_root)
@@ -77,6 +81,25 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v.strip().lower()
         return v
+
+    @model_validator(mode="after")
+    def _guest_cookie_samesite_for_https(self) -> Settings:
+        """Align guest cookie policy with how browsers treat cross-origin ``fetch``.
+
+        With ``Secure`` (HTTPS), ``SameSite=Lax`` cookies are not attached to cross-site
+        requests (e.g. Next.js on ``http://localhost:3000`` calling this API on another
+        host). Guest analyses then 404 on poll because the session cookie is missing.
+        Default upgrade: ``Lax`` + ``Secure`` → ``None`` so ``credentials: \"include\"``
+        works for typical split UI/API deployments.
+        """
+        if self.guest_cookie_samesite == "none" and not self.guest_cookie_secure:
+            raise ValueError(
+                "TOOTHFAIRY_GUEST_COOKIE_SAMESITE=none requires TOOTHFAIRY_GUEST_COOKIE_SECURE=true "
+                "(browsers reject SameSite=None without Secure)."
+            )
+        if self.guest_cookie_secure and self.guest_cookie_samesite == "lax":
+            return self.model_copy(update={"guest_cookie_samesite": "none"})
+        return self
 
     @field_validator(
         "repo_root",
